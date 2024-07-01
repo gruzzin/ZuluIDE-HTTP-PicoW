@@ -1,0 +1,36 @@
+<html>
+  <head><link rel='stylesheet' href='style.css'></head>
+  <body onload='lds()'>
+    <h1>ZuluIDE Control</h1>
+    <div id='st'>
+      Image: <span id='img'></span> <br/>
+      <button onclick='ejectClk()'>&#x23CF;</button><button onclick='selectClk()'>&#x1F4bF;</button>
+      <br/>
+      Device Type: <span id='dt'></span>
+      <hr/>
+      <button onclick='refresh()'>Refresh</button><br/>
+      <input type='checkbox' onclick='autoRefresh()' id='ar'>Auto Refresh</input>
+    </div>
+    <div id='si' class='hdn'>
+      <select id='newImg' size='10'>        
+      </select><br/>
+      <button onclick='loadClicked()'>Load</button><button onclick='cancelClicked()' style='float:right;'>Cancel</button>
+    </div>
+    <script>
+function lsc(flnm, old) {
+  let s = document.createElement('script');
+  s.type='text/javascript';
+  document.body.appendChild(s);
+  s.onload=old;
+  s.onerror=()=>lsc(flnm);
+  s.async=false;
+  s.src=flnm;
+  s._url=flnm;
+}
+function lds() {
+  lsc('control.js', null);
+  lsc('control2.js', onload);  
+}
+    </script>
+  </body>
+</html>
