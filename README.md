@@ -49,11 +49,11 @@ Get request that returns a JSON representation of the current state of the ZuluI
 
 ### `/nextImage`
 
-Get request that returns a JSON representation of one of the images on the SD card currently inserted in the ZuluIDE. If will return a `{"status":"wait"}` JSON document when it is in the processes of fetching the next image. When you receive this, try again. When it has finished interating through all of the images it will return a `{"status":"done"}` document.
+Get request that returns a JSON representation of one of the images on the SD card currently inserted in the ZuluIDE. It will return a `{"status":"wait"}` JSON document when it is in the processes of fetching the next image. When you receive this, try again. When it has finished interating through all of the images it will return a `{"status":"done"}` document.
 
 ### `/images`
 
-Get request that returns all of the images in the system in a JSON array. If will return a `{"status":"wait"}` JSON document when it is in the processes of fetching the images. Using this endpoint to retrieve all of the images in a single operation will load all of the images into the PicoW's memory.
+Get request that returns all of the images in the system in a JSON array. It will return a `{"status":"wait"}` JSON document when it is in the processes of fetching the images. Using this endpoint to retrieve all of the images in a single operation will load all of the images into the PicoW's memory.
 
 ### `/eject`
 
