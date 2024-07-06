@@ -41,7 +41,7 @@ The included web page is a very basic proof-of-concept for how to use the web se
 
 ## Using the Web Service
 
-The web service allows you to build your own interface or custom integration for controlling the ZuluIDE. Be warned, there is no security of any kind build into these web-service endpoints. The included web-page (`index.html`) provides an example of these web service endpoints can be used.
+The web service allows you to build your own interface or custom integration for controlling the ZuluIDE. Be warned, there is no security of any kind build into these web-service endpoints. The included web-page (`index.html`) provides an example of how these web service endpoints can be used.
 
 ### `/status`
 
