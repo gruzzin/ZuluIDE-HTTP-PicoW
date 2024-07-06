@@ -37,7 +37,7 @@ Lastly, be sure to restart the ZuluIDE with the PicoW connected. ZuluIDE does no
 
 ## Using the Web Page
 
-The included web page is a very basic proof-of-concept for how to use the web services. You access the web site by opening a browser and going to `index.html` using the IP address assigned to the PicoW via DHCP. For example, if your DHCP server assigned the PicoW `10.0.0.13` then you would open `http://10.0.0.13` in your browser. Be warned, there is no security of anykind built into this included website.
+The included web page is a very basic proof-of-concept for how to use the web services. You access the web site by opening a browser and going to `index.html` using the IP address assigned to the PicoW via DHCP. For example, if your DHCP server assigned the PicoW `10.0.0.13` then you would open `http://10.0.0.13/index.html` in your browser. Be warned, there is no security of anykind built into this included website.
 
 ## Using the Web Service
 
