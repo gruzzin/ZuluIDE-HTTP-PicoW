@@ -162,7 +162,7 @@ namespace zuluide::i2c::client {
    */
   void ProcessReset() {    
     printf("Reset Received.\n");
-    watchdog_reboot (0, 0, 0);
+    watchdog_reboot (0, 0, 1000);
   }
 }
 
