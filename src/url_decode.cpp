@@ -17,34 +17,33 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
-**/
+ **/
 
 #include "url_decode.h"
 
-void urldecode(char *str)
-{
-  int len = strlen(str);
-  int write = 0;
-  for (int read = 0; read < len; read++) {
-    switch (str[read]) {
-    case '+': {
-      str[write++] = ' ';
-      break;
-    }
+void urldecode(char *str) {
+   int len = strlen(str);
+   int write = 0;
+   for (int read = 0; read < len; read++) {
+      switch (str[read]) {
+         case '+': {
+            str[write++] = ' ';
+            break;
+         }
 
-    case '%': {
-      // Skip the %
-      read++;
-      sscanf(str + read++, "%02hhx", str + write++);      
-      break;
-    }
+         case '%': {
+            // Skip the %
+            read++;
+            sscanf(str + read++, "%02hhx", str + write++);
+            break;
+         }
 
-    default: {
-      str[write++] = str[read];
-      break;
-    }    
-    }
-  }
+         default: {
+            str[write++] = str[read];
+            break;
+         }
+      }
+   }
 
-  memset(str + write, 0, len - write);
+   memset(str + write, 0, len - write);
 }

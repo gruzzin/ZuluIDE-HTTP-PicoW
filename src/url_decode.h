@@ -17,13 +17,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
-**/
+ **/
 
 #ifndef URL_DECODE_H
 #define URL_DECODE_H
 
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 
 void urldecode(char *str);
