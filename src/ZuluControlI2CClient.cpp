@@ -174,10 +174,14 @@ void Init(uint sdaPin, uint sclPin, uint addr, uint baudrate) {
    gpio_init(sdaPin);
    gpio_set_function(sdaPin, GPIO_FUNC_I2C);
    gpio_pull_up(sdaPin);
+   // Maxing the drive strength seem to help the host connect more reliably
+   // Maxing out client side to the max sink strength to mirror the host 
+   gpio_set_drive_strength(sdaPin, GPIO_DRIVE_STRENGTH_12MA);
 
    gpio_init(sclPin);
    gpio_set_function(sclPin, GPIO_FUNC_I2C);
    gpio_pull_up(sclPin);
+   gpio_set_drive_strength(sclPin, GPIO_DRIVE_STRENGTH_12MA);
 
    i2c_init(i2c0, baudrate);
    i2c_slave_init(i2c0, addr, &i2c_slave_handler);

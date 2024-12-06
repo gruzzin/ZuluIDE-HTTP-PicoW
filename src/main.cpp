@@ -42,8 +42,8 @@
 static const uint I2C_SLAVE_ADDRESS = 0x45;
 static const uint I2C_BAUDRATE = 100000;  // 100 kHz
 
-static const uint I2C_SLAVE_SDA_PIN = 1;  // PICO_DEFAULT_I2C_SDA_PIN; // 4
-static const uint I2C_SLAVE_SCL_PIN = 0;  // PICO_DEFAULT_I2C_SCL_PIN; // 5
+static const uint I2C_SLAVE_SDA_PIN = 0;  // PICO_DEFAULT_I2C_SDA_PIN; // 4
+static const uint I2C_SLAVE_SCL_PIN = 1;  // PICO_DEFAULT_I2C_SCL_PIN; // 5
 
 enum class ImageCacheState { Idle,
                              Fetching,
@@ -172,7 +172,12 @@ void ProcessPassword(const uint8_t *message, size_t length) {
  */
 void ProcessReset() {
    printf("Reset Received.\n");
-   watchdog_reboot(0, 0, 1000);
+   // Was set to 1 sec which was causing the controller interface to miss initialization and data
+   // transfer. Setting to 10ms for now, the wasn't any reasoning behind 10ms but it works
+   // with more SD Cards. The theory is some SD cards caused a delay of more than 1 second
+   // while the watch dog was waiting to reboot, causing the ZuluIDE not to connect. Other cards
+   // did allow the ZuluSCSI to connect to WiFi.
+   watchdog_reboot(0, 0, 10);
 }
 }  // namespace zuluide::i2c::client
 
