@@ -217,7 +217,9 @@ bool TryReceive(Packet** toRecv) {
 void ProcessMessages() {
    zuluide::i2c::client::Packet* toRecv;
    if (TryReceive(&toRecv)) {
-      if (Is(toRecv, I2C_SERVER_SYSTEM_STATUS_JSON)) {
+      if (Is(toRecv, I2C_SERVER_API_VERSION)) {
+         ProcessServerAPIVersion(toRecv->buffer, toRecv->length);
+      } else if (Is(toRecv, I2C_SERVER_SYSTEM_STATUS_JSON)) {
          ProcessSystemStatus(toRecv->buffer, toRecv->length);
       } else if (Is(toRecv, I2C_SERVER_IMAGE_JSON)) {
          ProcessImage(toRecv->buffer, toRecv->length);
