@@ -25,7 +25,7 @@ function cancelClicked() {
 function loadClicked() {
  let si = document.getElementById('newImg');
  fetch('image?' +  new URLSearchParams({
-  imageName: encodeURIComponent(si.value)
+  imageName: si.value
  })).then(r => r.json())
     .then(s => { if (s.status != 'ok') alert('Select failed.');} );
  showStatus();
