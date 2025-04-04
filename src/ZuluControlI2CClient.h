@@ -22,10 +22,13 @@
 #ifndef ZULU_CONTROL_I2C_CLIENT
 #define ZULU_CONTROL_I2C_CLIENT
 
+#define I2C_API_VERSION "2.0.0"
+
 #define MAX_MSG_SIZE 2048
 #define BUFFER_LENGTH 8
 #define INPUT_BUFFER_COUNT 5
 
+#define I2C_SERVER_API_VERSION  0x1
 #define I2C_SERVER_SYSTEM_STATUS_JSON 0xA
 #define I2C_SERVER_IMAGE_JSON 0xB
 #define I2C_SERVER_SSID 0xD
@@ -33,6 +36,7 @@
 #define I2C_SERVER_RESET 0xF
 
 #define I2C_CLIENT_NOOP 0x0
+#define I2C_CLIENT_API_VERSION 0x01
 #define I2C_CLIENT_SUBSCRIBE_STATUS_JSON 0xA
 #define I2C_CLIENT_LOAD_IMAGE 0xB
 #define I2C_CLIENT_EJECT_IMAGE 0xC
@@ -42,6 +46,7 @@
 #define I2C_CLIENT_FETCH_ITR_IMAGE 0x10
 #define I2C_CLIENT_IP_ADDRESS 0x11
 #define I2C_CLIENT_NET_DOWN 0x12
+
 
 #include <pico/i2c_slave.h>
 #include <pico/stdlib.h>
@@ -79,6 +84,11 @@ bool EnqueueRequest(uint8_t request);
    Enqueues a request to send to the I2C server with the provided string argument.
  */
 bool EnqueueRequest(uint8_t request, const char* toSend);
+
+/**
+   Called when the Server API version is received from the server.
+*/
+void ProcessServerAPIVersion(const uint8_t* message, size_t length);
 
 /**
    Called when a system status update is received from the I2C server.

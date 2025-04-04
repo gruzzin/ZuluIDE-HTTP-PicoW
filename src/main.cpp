@@ -53,6 +53,8 @@ enum class ImageCacheState { Idle,
 
 static volatile ImageCacheState imageState = ImageCacheState::Idle;
 
+static char versionJson[MAX_MSG_SIZE];
+
 static char currentStatus[MAX_MSG_SIZE];
 
 static queue_t imageQueue;
@@ -65,17 +67,77 @@ static std::string wifiPass;
 
 static std::string wifiSSID;
 
-enum class State { WaitingForSSID,
+static std::string serverAPIVersion;
+
+enum class State { 
+                   WaitForAPIVersion,
+                   WaitingForSSID,
                    WaitingForPassword,
                    WIFIInit,
                    WIFIDown,
                    Normal };
 
-static State programState = State::WaitingForSSID;
+static State programState = State::WaitForAPIVersion;
 
 void RebuildImageJson();
 
 namespace zuluide::i2c::client {
+
+/**
+   Callback function for receiving I2C Server API version string.
+ */
+
+void  ProcessServerAPIVersion(const uint8_t *message, size_t length) {
+   memset(versionJson, '\0', sizeof(versionJson));
+   strcat(versionJson, "{\"clientAPIVersion\":\"");
+   strcat(versionJson, I2C_API_VERSION);
+   strcat(versionJson, "\"");
+   printf("Client API version: v%s\n", I2C_API_VERSION );
+   bool matching_major_version = false;
+   unsigned long server_major_version = 0;
+   unsigned long client_major_version = 0;
+   char* period_location = strchr(I2C_API_VERSION, '.');
+   client_major_version = strtoul(I2C_API_VERSION, &period_location, 10);
+
+   if (length > 0)
+   {
+      serverAPIVersion = std::string((const char*)message);
+      strcat(versionJson, ", \"serverAPIVersion\":\"");
+      strcat(versionJson, (const char*)message);
+      strcat(versionJson, "\"");
+      printf("Server API version: v%s\n", message);
+
+      period_location = strchr((const char*)message, '.');
+      if (period_location != NULL)
+      {
+         server_major_version = strtoul((const char*)message, &period_location, 10);
+         if (period_location != NULL)
+         {
+            if (client_major_version > 0 && client_major_version == server_major_version)
+            {
+               matching_major_version = true;
+            }
+            }
+      }
+      
+   }
+   else
+   {
+      strcat(versionJson, ", \"serverAPIVersion\":\"Unknown\"");
+      printf("Error: no API version received from server\n");
+   }
+
+   if (!matching_major_version)
+   {
+      strcat(versionJson, ", \"message\":\"API major version mismatch. Please update both devices to the latest firmware. <br/> <a href='https://github.com/ZuluIDE/ZuluIDE-firmware/releases'>ZuluIDE firmware</a><br /><a href='https://github.com/ZuluIDE/ZuluIDE-HTTP-PicoW/releases'>ZuluIDE-HTTP-PicoW firmware</a>\"");
+      printf("Warning: major versions between client and sever do not match. Please upgrade both devices to the latest firmware\n");
+      printf("https://github.com/ZuluIDE/ZuluIDE-HTTP-PicoW/releases\n");
+      printf("https://github.com/ZuluIDE/ZuluIDE-firmware/releases\n");
+   }
+
+   strcat(versionJson, "}");
+
+}
 
 /**
    Callback function for receiving system status that copies the status
@@ -182,9 +244,16 @@ void ProcessReset() {
 }  // namespace zuluide::i2c::client
 
 /**
+   Redirect a request to /version to /version.json.
+ */
+static const char *cgi_handler_version(int index, int numParams, char *pcParam[], char *pcValue[]) {
+   return "/version.json";
+}
+
+/**
    Redirect a request to /status to /status.json.
  */
-static const char *cgi_handler(int index, int numParams, char *pcParam[], char *pcValue[]) {
+static const char *cgi_handler_status(int index, int numParams, char *pcParam[], char *pcValue[]) {
    return "/status.json";
 }
 
@@ -265,7 +334,9 @@ static const char *cgi_handler_eject(int index, int numParams, char *params[], c
    return "/ok.json";
 }
 
-static const tCGI cgi_handlers[] = {{"/status", cgi_handler},
+static const tCGI cgi_handlers[] = {
+                                    {"/version", cgi_handler_version},
+                                    {"/status", cgi_handler_status},
                                     {"/images", cgi_handler_imgs},
                                     {"/image", cgi_handler_image},
                                     {"/eject", cgi_handler_eject},
@@ -275,6 +346,8 @@ int main() {
    printf("Starting.\n");
 
    memset(currentStatus, 0, MAX_MSG_SIZE);
+   memset(versionJson, '\0', MAX_MSG_SIZE);
+   sprintf(versionJson,"{\"clientAPIVersion\":\"%s\", \"serverAPIVersion\": \"server failed to send version\"}", I2C_API_VERSION);
    queue_init(&imageQueue, sizeof(char *), 1);
 
    stdio_init_all();
@@ -289,6 +362,10 @@ int main() {
 
    while (true) {
       switch (programState) {
+         case State::WaitForAPIVersion:
+            zuluide::i2c::client::EnqueueRequest(I2C_CLIENT_API_VERSION, I2C_API_VERSION);
+            programState = State::WaitingForSSID;
+            break;
          case State::WaitingForSSID:
          case State::WaitingForPassword: {
             // Waiting to receive the SSID and password via I2C.
@@ -329,7 +406,7 @@ int main() {
 
                if (!httpInitialized) {
                   httpd_init();
-                  http_set_cgi_handlers(cgi_handlers, 5);
+                  http_set_cgi_handlers(cgi_handlers, sizeof(cgi_handlers)/sizeof(cgi_handlers[0]));
                   printf("Http server initialized.\n");
                   httpInitialized = true;
                }
@@ -350,7 +427,7 @@ int main() {
             // Test for WIFI going down.
             if (cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA) != CYW43_LINK_UP) {
                programState = State::WIFIInit;
-               printf("WiFi connecton down.\n");
+               printf("WiFi connection down.\n");
 
                // Notify the I2C server that we have lost our network connection.
                zuluide::i2c::client::EnqueueRequest(I2C_CLIENT_NET_DOWN);
@@ -448,6 +525,14 @@ int fs_open_custom(struct fs_file *file, const char *name) {
       return get_file_contents(file, control_2_js, strlen(control_2_js));
    } else if (strncmp(name, "/style.css", sizeof("/style.css")) == 0) {
       return get_file_contents(file, style_css, strlen(style_css));
+   } else if (strncmp(name, "/style2.css", sizeof("/style2.css")) == 0) {
+      return get_file_contents(file, style_2_css, strlen(style_2_css));
+   } else if (strncmp(name, "/style3.css", sizeof("/style3.css")) == 0) {
+      return get_file_contents(file, style_3_css, strlen(style_3_css));
+   } else if (strncmp(name, "/style4.css", sizeof("/style4.css")) == 0) {
+      return get_file_contents(file, style_4_css, strlen(style_4_css));
+   } else if (strncmp(name, "/style_rhc.css", sizeof("/style_rhc.css")) == 0) {
+      return get_file_contents(file, style_rhc_css, strlen(style_rhc_css));
    } else if (strncmp(name, "/nextImage.json", sizeof("/nextImage.json")) == 0) {
       char *image;
       if (queue_try_remove(&imageQueue, &image)) {
@@ -457,6 +542,11 @@ int fs_open_custom(struct fs_file *file, const char *name) {
       }
 
       return 0;
+      
+   } else if (strncmp(name, "/version.js", sizeof("/version.js")) == 0) {
+      return get_file_contents(file, version_js, strlen(version_js));
+   } else if (strncmp(name, "/version.json", sizeof("/version.json")) == 0) {
+      return get_file_contents(file, versionJson, strlen(versionJson));
    } else {
       printf("Unable to find %s\n", name);
       return 0;
