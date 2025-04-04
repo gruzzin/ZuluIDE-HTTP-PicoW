@@ -44,7 +44,7 @@ jobs:
           name: ZuluIDE-HTTP-PicoW binary
       - name: Get current date
         id: date
-        run: echo "date=$(date +'%Y-%m-%d') >> $GITHUB_OUTPUT"
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
       - name: Upload to latest release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
