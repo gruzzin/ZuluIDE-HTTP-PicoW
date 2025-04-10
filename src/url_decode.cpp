@@ -22,6 +22,7 @@
 #include "url_decode.h"
 
 void urldecode(char *str) {
+   if (!str) return;
    int len = strlen(str);
    int write = 0;
    for (int read = 0; read < len; read++) {
@@ -32,9 +33,20 @@ void urldecode(char *str) {
          }
 
          case '%': {
-            // Skip the %
-            read++;
-            sscanf(str + read++, "%2hhx", str + write++);
+            // If there are 2 more chars and they're hex digits
+            if (
+                (read + 2) < len
+                && isxdigit(str[read + 1])
+                && isxdigit(str[read + 2])
+            ) {
+                // Skip the %
+                read++;
+                sscanf(str + read++, "%2hhx", str + write++);
+            }
+            // Pass the %
+            else {
+                str[write++] = '%';
+            }
             break;
          }
 
